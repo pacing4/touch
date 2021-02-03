@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			.drag {
+				position: relative;
+				width: 50px;
+				height: 50px;
+				background-color: blueviolet;
+				transition: all 40ms;
+			}
+		</style>
+	</head>
+	<body>
+		<div>在浏览器下,请按下F12进入开发者模式，在手机模式查看</div>
+		<div id="drag" class="drag"></div>
+
+		<script>
+			var buttonLeft = 0;
+			var buttonTop = 0;
+			var modalId = 'mark';
+			var source = {};
+			var dragEle = document.getElementById('drag');
+			console.log(dragEle);
+
+			// createModal('mark');
+
+			// 创建蒙层
+			function createModal(id) {
+				let modal = document.getElementById(id);
+				if (!modal) {
+					// 在没有遮罩的时候创建遮罩
+					modal = document.createElement('div');
+					modal.id = id;
+					modal.style.cssText = `position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 999;`;
+					document.body.appendChild(modal);
+				}
+			}
+			// 开始拖拽
+			function handleTouchstart(e) {
+				createModal(modalId);
+				console.log(e, '==start');
+				// e.preventDefault(); // 阻止默认行为，此处添加，在qq或微信中，拖拽可以正常触发，但是a标签和click事件将不会被触发。如果move中添加了，这个就可以隐藏了
+				// 开始拖拽
+				let element = e.targetTouches[0]; // 记录初始 client 位置，用于计算移动距离
+				source.client = {
+					x: element.clientX,
+					y: element.clientY
+				};
+			}
+			// 处理拖拽
+			function handleTouchmove(e) {
+				// 拖拽中
+				let element = e.targetTouches[0];
+
+				// 根据初始 client 位置计算移动距离
+				let x = element.clientX - source.client.x;
+				let y = element.clientY - source.client.y;
+
+				source.client = {
+					x: element.clientX,
+					y: element.clientY
+				};
+
+				buttonLeft = buttonLeft + x;
+				buttonTop = buttonTop + y;
+
+				// 此处做阻止行为，如果不加方向判断，页面的滚动条将会被阻止。
+				let w = x < 0 ? x * -1 : x;
+				let h = y < 0 ? x * -1 : y;
+				if (w > h) {
+					e.preventDefault();
+				}
+				// console.log(element, '==element');
+				// 移动当前元素
+				element.target.style.cssText = `transform: translateX(${buttonLeft}px) translateY(${buttonTop}px) translateZ(0); transform-origin:center center;`;
+			}
+			// 拖拽结束
+			function handleTouchend(e) {
+				// 拖拽结束
+				let end = {
+					x: e.changedTouches[0].clientX,
+					y: e.changedTouches[0].clientY
+				};
+				// 删除遮罩层
+				let modal = document.getElementById(modalId);
+				document.body.removeChild(modal);
+				// 清除拖拽样式
+				e.target.style.cssText += `will-change:auto`;
+				// 记录初始 client 位置，用于计算移动距离
+				// source.client = end;
+			}
+
+			// console.log(handleTouchmove);
+			dragEle.addEventListener('touchstart', handleTouchstart, false);
+			dragEle.addEventListener('touchmove', handleTouchmove, false);
+			dragEle.addEventListener('touchend', handleTouchend, false);
+		</script>
+	</body>
+</html>
